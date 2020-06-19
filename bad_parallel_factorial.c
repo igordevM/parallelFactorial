@@ -8,19 +8,14 @@
 typedef struct {
   uint64_t begin;
   uint64_t end;
-  uint64_t step;
 } FactorialArgs;
 
 uint64_t Factorial(const struct FactorialArgs *args) {
   FactorialArgs *f_part = (FactorialArgs*)args;
-  uint64_t res = f_part->begin;
-  uint64_t i = f_part->begin + f_part->step;
+  uint64_t res = 1;
 
-  while (i <= f_part->end) {
-    res *= i;
-    i += f_part->step;
-  }
-
+  for (int i = f_part->begin; i < f_part->end; i++)
+      res *= (i + 1);
   return res;
 }
 
@@ -83,17 +78,19 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  uint64_t step = k > threads_num ? (k / threads_num) : 1;
   pthread_t threads[threads_num];
   FactorialArgs factorial_parts[threads_num];
+
+
 
 
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
 
   for(uint64_t i = 0; i < threads_num; i++) {
-      factorial_parts[i].begin = i + 1;
-      factorial_parts[i].end = k;
-      factorial_parts[i].step = threads_num;
+      factorial_parts[i].begin = step * i;
+      factorial_parts[i].end = (i + 1) * step;
       if (pthread_create(&threads[i], NULL, calculate_factorial, (void*)&factorial_parts[i])) {
           perror("\nERROR CREATE THREAD\n");
           return 1;
@@ -114,7 +111,7 @@ int main(int argc, char **argv) {
   double elapsed_time = (finish_time.tv_usec - start_time.tv_usec) / 1000.0;
 
   printf("The factorial of %i equals %i.\n", k, ans);
-  printf("It took %f milliseconds to find a factorial for %d threads\n", elapsed_time, threads_num);
+  printf("It took %f milliseconds to find a sum for %d threads\n", elapsed_time, threads_num);
 
   return 0;
 }
